@@ -33,5 +33,5 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: build-${{ github.run_number }}
-          name: 每日清单 v1.0 (build ${{ github.run_number }})
+          name: 每日清单 v1.1 (build ${{ github.run_number }})
           files: DailyChecklist.apk
