@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f1115">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>每日清单</title>
+<style>
+  :root{
+    --bg:#0f1115; --card:#181b22; --card2:#1f232c; --line:#2a2f3a;
+    --text:#e9ecf1; --muted:#8b93a3; --accent:#4ade80; --accent2:#22c55e;
+    --danger:#f87171; --temp:#60a5fa;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif}
+  body{padding:calc(env(safe-area-inset-top) + 16px) 16px calc(env(safe-area-inset-bottom) + 32px)}
+  .wrap{max-width:560px;margin:0 auto}
+  header{margin-bottom:18px}
+  .date{font-size:14px;color:var(--muted);letter-spacing:.5px}
+  h1{margin:4px 0 14px;font-size:26px;font-weight:700}
+  .prog{display:flex;align-items:center;gap:12px}
+  .bar{flex:1;height:10px;background:var(--card2);border-radius:99px;overflow:hidden}
+  .fill{height:100%;width:0;background:linear-gradient(90deg,var(--accent2),var(--accent));border-radius:99px;transition:width .35s}
+  .count{font-size:15px;font-weight:600;min-width:52px;text-align:right}
+  .done-banner{display:none;margin-top:14px;padding:14px;border-radius:14px;
+    background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.35);color:var(--accent);
+    font-weight:600;text-align:center;font-size:16px}
+  .done-banner.show{display:block;animation:pop .4s ease}
+  @keyframes pop{0%{transform:scale(.9);opacity:0}100%{transform:scale(1);opacity:1}}
+  section{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:6px 0 10px;margin-bottom:16px}
+  .sec-head{display:flex;justify-content:space-between;align-items:center;padding:10px 16px 6px}
+  .sec-title{font-size:13px;color:var(--muted);font-weight:600;letter-spacing:1px}
+  .sec-title .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:1px}
+  .edit-btn{background:none;border:none;color:var(--muted);font-size:14px;padding:6px 4px;cursor:pointer}
+  .edit-btn.on{color:var(--accent)}
+  ul{list-style:none;margin:0;padding:0}
+  li{display:flex;align-items:center;gap:12px;padding:12px 16px;min-height:54px;cursor:pointer;user-select:none}
+  li+li{border-top:1px solid var(--line)}
+  .box{flex:none;width:26px;height:26px;border-radius:8px;border:2px solid #4b5263;display:grid;place-items:center;transition:all .15s}
+  .box svg{width:16px;height:16px;opacity:0;transform:scale(.5);transition:all .15s}
+  li.checked .box{background:var(--accent2);border-color:var(--accent2)}
+  li.checked .box svg{opacity:1;transform:scale(1)}
+  .temp li.checked .box{background:var(--temp);border-color:var(--temp)}
+  .txt{flex:1;font-size:17px;line-height:1.35;word-break:break-word}
+  li.checked .txt{color:var(--muted);text-decoration:line-through}
+  .del,.up{flex:none;background:none;border:none;font-size:20px;padding:4px 8px;cursor:pointer;display:none}
+  .del{color:var(--danger)} .up{color:var(--muted)}
+  .editing .del,.editing .up{display:block}
+  .editing li{cursor:default}
+  .editing .box{display:none}
+  .editing .txt{outline:none;border-bottom:1px dashed #4b5263;padding-bottom:2px}
+  .empty{padding:14px 16px;color:var(--muted);font-size:14px}
+  .add{display:flex;gap:8px;padding:8px 12px 0}
+  .add input{flex:1;min-width:0;background:var(--card2);border:1px solid var(--line);color:var(--text);
+    border-radius:12px;padding:12px 14px;font-size:16px;outline:none}
+  .add input:focus{border-color:#4b5263}
+  .add button{flex:none;background:var(--card2);color:var(--text);border:1px solid var(--line);border-radius:12px;
+    padding:0 16px;font-size:22px;cursor:pointer}
+  .add button:active{background:var(--line)}
+  .foot{text-align:center;color:var(--muted);font-size:12px;margin-top:8px;line-height:1.7}
+  .foot button{background:none;border:none;color:var(--muted);text-decoration:underline;font-size:12px;cursor:pointer;padding:4px}
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:flex-end;justify-content:center;z-index:10}
+  .modal.show{display:flex}
+  .sheet{background:var(--card);border-top-left-radius:18px;border-top-right-radius:18px;width:100%;max-width:560px;
+    padding:18px 16px calc(env(safe-area-inset-bottom) + 18px)}
+  .sheet h3{margin:0 0 8px;font-size:17px}
+  .sheet p{margin:0 0 10px;color:var(--muted);font-size:13px}
+  .sheet textarea{width:100%;height:120px;background:var(--card2);color:var(--text);border:1px solid var(--line);
+    border-radius:12px;padding:10px;font-size:12px;font-family:monospace}
+  .row{display:flex;gap:8px;margin-top:10px}
+  .row button{flex:1;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--card2);color:var(--text);font-size:15px;cursor:pointer}
+  .row button.primary{background:var(--accent2);border-color:var(--accent2);color:#05210f;font-weight:600}
+  .toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 24px);transform:translateX(-50%);
+    background:#2a2f3a;color:var(--text);padding:10px 16px;border-radius:99px;font-size:14px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:20}
+  .toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date" id="date"></div>
+    <h1>今日清单</h1>
+    <div class="prog"><div class="bar"><div class="fill" id="fill"></div></div><div class="count" id="count">0/0</div></div>
+    <div class="done-banner" id="banner">🎉 今天全部完成！</div>
+  </header>
+
+  <section id="fixedSec">
+    <div class="sec-head">
+      <div class="sec-title"><span class="dot" style="background:var(--accent)"></span>每日固定</div>
+      <button class="edit-btn" id="editBtn">编辑</button>
+    </div>
+    <ul id="fixedList"></ul>
+    <form class="add" id="fixedForm"><input id="fixedInput" placeholder="新增每日固定任务…" maxlength="80" autocomplete="off"><button type="submit">＋</button></form>
+  </section>
+
+  <section class="temp" id="tempSec">
+    <div class="sec-head">
+      <div class="sec-title"><span class="dot" style="background:var(--temp)"></span>今天临时（明天自动清空）</div>
+    </div>
+    <ul id="tempList"></ul>
+    <form class="add" id="tempForm"><input id="tempInput" placeholder="新增今天的临时任务…" maxlength="80" autocomplete="off"><button type="submit">＋</button></form>
+  </section>
+
+  <div class="foot">
+    每天 00:00 自动重置勾选 · 数据存在本机<br>
+    <button id="backupBtn">备份 / 还原</button>
+  </div>
+</div>
+
+<div class="modal" id="modal">
+  <div class="sheet">
+    <h3>备份 / 还原</h3>
+    <p>备份：复制下面的文字，存到记事本或 WhatsApp。还原：把备份文字贴进来，按"还原"。</p>
+    <textarea id="backupText"></textarea>
+    <div class="row">
+      <button id="copyBtn">复制</button>
+      <button id="restoreBtn">还原</button>
+      <button class="primary" id="closeBtn">关闭</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  var KEY = "daily_checklist_v1";
+  var CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="#05210f" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+  var editing = false;
+
+  function todayStr(){
+    var d = new Date();
+    return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+  }
+  function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+
+  function defaults(){
+    return { fixed: [], day: todayStr(), done: {}, temp: [], updatedAt: 0 };
+  }
+  function normalize(s){
+    if(!s || typeof s !== "object") return defaults();
+    return {
+      fixed: Array.isArray(s.fixed) ? s.fixed.filter(function(t){return t && t.id && typeof t.text==="string";}) : [],
+      day: typeof s.day==="string" ? s.day : todayStr(),
+      done: (s.done && typeof s.done==="object") ? s.done : {},
+      temp: Array.isArray(s.temp) ? s.temp.filter(function(t){return t && t.id && typeof t.text==="string";}) : [],
+      updatedAt: Number(s.updatedAt)||0
+    };
+  }
+  function loadLocal(){
+    try { var raw = localStorage.getItem(KEY); return raw ? normalize(JSON.parse(raw)) : null; } catch(e){ return null; }
+  }
+  var state = loadLocal() || defaults();
+
+  function rollover(){
+    var t = todayStr();
+    if(state.day !== t){
+      state.day = t; state.done = {}; state.temp = [];
+      return true;
+    }
+    return false;
+  }
+
+  function save(){
+    state.updatedAt = Date.now();
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e){}
+  }
+
+  // ---------- render ----------
+  var $ = function(id){ return document.getElementById(id); };
+  function esc(s){ return s.replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
+
+  function itemHTML(t, checked, kind, idx){
+    return '<li class="'+(checked?"checked":"")+'" data-id="'+t.id+'" data-kind="'+kind+'">'+
+      '<div class="box">'+CHECK+'</div>'+
+      '<div class="txt"'+(editing&&kind==="fixed"?' contenteditable="true"':'')+'>'+esc(t.text)+'</div>'+
+      (kind==="fixed" && idx>0 ? '<button class="up" data-act="up" aria-label="上移">↑</button>' : (kind==="fixed"?'<button class="up" style="visibility:hidden">↑</button>':''))+
+      '<button class="del" data-act="del" aria-label="删除">✕</button>'+
+    '</li>';
+  }
+
+  function render(){
+    var d = new Date();
+    var wk = ["日","一","二","三","四","五","六"][d.getDay()];
+    $("date").textContent = (d.getMonth()+1)+"月"+d.getDate()+"日 · 星期"+wk;
+
+    var fl = $("fixedList");
+    fl.innerHTML = state.fixed.length
+      ? state.fixed.map(function(t,i){ return itemHTML(t, !!state.done[t.id], "fixed", i); }).join("")
+      : '<div class="empty">还没有固定任务，在下面新增（例如：运动、喝水、发 TikTok）</div>';
+    $("fixedSec").classList.toggle("editing", editing);
+    $("editBtn").textContent = editing ? "完成" : "编辑";
+    $("editBtn").classList.toggle("on", editing);
+
+    var tl = $("tempList");
+    tl.innerHTML = state.temp.length
+      ? state.temp.map(function(t){ return itemHTML(t, !!t.done, "temp", 0); }).join("")
+      : '<div class="empty">今天没有临时任务</div>';
+    $("tempSec").classList.toggle("editing", false);
+
+    var total = state.fixed.length + state.temp.length;
+    var done = state.fixed.filter(function(t){return state.done[t.id];}).length + state.temp.filter(function(t){return t.done;}).length;
+    $("count").textContent = done+"/"+total;
+    $("fill").style.width = total ? (done/total*100)+"%" : "0";
+    $("banner").classList.toggle("show", total>0 && done===total);
+  }
+
+  // ---------- events ----------
+  function onListClick(e){
+    var li = e.target.closest("li"); if(!li) return;
+    var id = li.dataset.id, kind = li.dataset.kind;
+    var act = e.target.closest("button") && e.target.closest("button").dataset.act;
+    if(act === "del"){
+      if(kind==="fixed"){ state.fixed = state.fixed.filter(function(t){return t.id!==id;}); delete state.done[id]; }
+      else { state.temp = state.temp.filter(function(t){return t.id!==id;}); }
+      save(); render(); toast("已删除"); return;
+    }
+    if(act === "up"){
+      var i = state.fixed.findIndex(function(t){return t.id===id;});
+      if(i>0){ var a=state.fixed[i-1]; state.fixed[i-1]=state.fixed[i]; state.fixed[i]=a; save(); render(); }
+      return;
+    }
+    if(editing && kind==="fixed") return; // editing text
+    if(kind==="fixed"){ if(state.done[id]) delete state.done[id]; else state.done[id]=true; }
+    else { state.temp.forEach(function(t){ if(t.id===id) t.done=!t.done; }); }
+    if(window.Android && Android.vibrate){ try{Android.vibrate();}catch(_){} }
+    save(); render();
+  }
+  $("fixedList").addEventListener("click", onListClick);
+  $("tempList").addEventListener("click", onListClick);
+
+  $("fixedList").addEventListener("focusout", function(e){
+    var txt = e.target.closest(".txt"); if(!txt) return;
+    var id = txt.closest("li").dataset.id;
+    var v = txt.textContent.trim();
+    state.fixed.forEach(function(t){ if(t.id===id){ if(v) t.text=v; } });
+    save();
+  });
+  $("fixedList").addEventListener("keydown", function(e){
+    if(e.key==="Enter" && e.target.closest(".txt")){ e.preventDefault(); e.target.blur(); }
+  });
+
+  $("editBtn").addEventListener("click", function(){
+    if(editing && document.activeElement) document.activeElement.blur();
+    editing = !editing; render();
+  });
+
+  $("fixedForm").addEventListener("submit", function(e){
+    e.preventDefault();
+    var v = $("fixedInput").value.trim(); if(!v) return;
+    state.fixed.push({id:uid(), text:v}); $("fixedInput").value="";
+    save(); render();
+  });
+  $("tempForm").addEventListener("submit", function(e){
+    e.preventDefault();
+    var v = $("tempInput").value.trim(); if(!v) return;
+    state.temp.push({id:uid(), text:v, done:false}); $("tempInput").value="";
+    save(); render();
+  });
+
+  // backup / restore
+  $("backupBtn").addEventListener("click", function(){
+    $("backupText").value = JSON.stringify({fixed:state.fixed});
+    $("modal").classList.add("show");
+  });
+  $("closeBtn").addEventListener("click", function(){ $("modal").classList.remove("show"); });
+  $("modal").addEventListener("click", function(e){ if(e.target.id==="modal") $("modal").classList.remove("show"); });
+  $("copyBtn").addEventListener("click", function(){
+    var v = $("backupText").value;
+    if(window.Android && Android.copy){ Android.copy(v); toast("已复制"); return; }
+    try {
+      navigator.clipboard.writeText(v).then(function(){toast("已复制");}, function(){ $("backupText").select(); toast("请长按选择并复制"); });
+    } catch(e){ $("backupText").select(); toast("请长按选择并复制"); }
+  });
+  $("restoreBtn").addEventListener("click", function(){
+    try{
+      var obj = JSON.parse($("backupText").value);
+      if(!obj || !Array.isArray(obj.fixed)) throw 0;
+      state.fixed = normalize({fixed:obj.fixed}).fixed;
+      save(); render(); $("modal").classList.remove("show"); toast("已还原固定任务");
+    }catch(e){ toast("备份文字格式不对"); }
+  });
+
+  var toastT;
+  function toast(msg){ var t=$("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(function(){t.classList.remove("show");},1600); }
+
+  // midnight reset while open
+  function tick(){ if(rollover()){ save(); render(); } }
+  setInterval(tick, 30000);
+  document.addEventListener("visibilitychange", function(){ if(!document.hidden) tick(); });
+
+  if(rollover()) save();
+  render();
+
+})();
+</script>
+</body>
+</html>
