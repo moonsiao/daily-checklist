@@ -73,6 +73,7 @@
   .tgt input{width:44px;background:var(--card2);border:1px solid var(--line);border-radius:8px;color:var(--text);font-size:15px;text-align:center;padding:6px 0}
   .editing .tgt{display:flex}
   .editing .cnt,.editing .minus{display:none}
+  .rsel{background:var(--card2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:4px 6px;font-size:13px}
   .foot{text-align:center;color:var(--muted);font-size:12px;margin-top:8px;line-height:1.7}
   .foot button{background:none;border:none;color:var(--muted);text-decoration:underline;font-size:12px;cursor:pointer;padding:4px}
   .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:flex-end;justify-content:center;z-index:10}
@@ -118,7 +119,7 @@
   </section>
 
   <div class="foot">
-    每天 00:00 自动重置勾选 · 数据存在本机<br>
+    每天 <select id="resetSel" class="rsel"></select> 自动重置 · 数据存在本机<br>
     <button id="backupBtn">备份 / 还原</button>
   </div>
 </div>
@@ -143,14 +144,15 @@
   var CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="#05210f" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
   var editing = false;
 
+  function logicalNow(){ return new Date(Date.now() - ((state && state.resetHour)||0)*3600000); }
   function todayStr(){
-    var d = new Date();
+    var d = logicalNow();
     return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
   }
   function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
 
   function defaults(){
-    return { fixed: [], day: todayStr(), done: {}, temp: [], updatedAt: 0 };
+    return { fixed: [], day: todayStr(), done: {}, temp: [], resetHour: 0, updatedAt: 0 };
   }
   function clampT(n){ n = parseInt(n,10); return (n>=1 && n<=99) ? n : 1; }
   function normDone(d){
@@ -168,6 +170,7 @@
         var c = typeof t.count==="number" ? t.count : (t.done ? clampT(t.target) : 0);
         return {id:t.id,text:t.text,target:clampT(t.target),count:Math.max(0,c|0)};
       }) : [],
+      resetHour: (function(h){ h=parseInt(h,10); return (h>=0&&h<=23)?h:0; })(s.resetHour),
       updatedAt: Number(s.updatedAt)||0
     };
   }
@@ -209,8 +212,9 @@
   }
 
   function render(){
-    var d = new Date();
+    var d = logicalNow();
     var wk = ["日","一","二","三","四","五","六"][d.getDay()];
+    $("resetSel").value = String(state.resetHour||0);
     $("date").textContent = (d.getMonth()+1)+"月"+d.getDate()+"日 · 星期"+wk;
 
     var fl = $("fixedList");
@@ -307,7 +311,7 @@
 
   // backup / restore
   $("backupBtn").addEventListener("click", function(){
-    $("backupText").value = JSON.stringify({fixed:state.fixed});
+    $("backupText").value = JSON.stringify({fixed:state.fixed, resetHour:state.resetHour});
     $("modal").classList.add("show");
   });
   $("closeBtn").addEventListener("click", function(){ $("modal").classList.remove("show"); });
@@ -324,12 +328,24 @@
       var obj = JSON.parse($("backupText").value);
       if(!obj || !Array.isArray(obj.fixed)) throw 0;
       state.fixed = normalize({fixed:obj.fixed}).fixed;
+      if(obj.resetHour!==undefined){ state.resetHour = normalize({resetHour:obj.resetHour}).resetHour; state.day = todayStr(); }
       save(); render(); $("modal").classList.remove("show"); toast("已还原固定任务");
     }catch(e){ toast("备份文字格式不对"); }
   });
 
   var toastT;
   function toast(msg){ var t=$("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(function(){t.classList.remove("show");},1600); }
+
+  (function(){
+    var sel = $("resetSel"), html = "";
+    for(var h=0; h<24; h++) html += '<option value="'+h+'">'+String(h).padStart(2,"0")+':00</option>';
+    sel.innerHTML = html;
+    sel.addEventListener("change", function(){
+      state.resetHour = parseInt(sel.value,10)||0;
+      state.day = todayStr(); // keep today's ticks when changing the time
+      save(); render(); toast("每天 "+sel.options[sel.selectedIndex].text+" 重置");
+    });
+  })();
 
   // midnight reset while open
   function tick(){ if(rollover()){ save(); render(); } }
