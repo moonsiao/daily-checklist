@@ -1,6 +1,6 @@
 {
-  "name": "每日清单",
-  "short_name": "每日清单",
+  "name": "每日重置 Daily Reset",
+  "short_name": "每日重置",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

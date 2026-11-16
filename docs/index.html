@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#0f1115">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>每日清单</title>
+<title>每日重置 Daily Reset</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -240,6 +240,9 @@
     $("count").textContent = done+"/"+total;
     $("fill").style.width = total ? (part/total*100)+"%" : "0";
     $("banner").classList.toggle("show", total>0 && done===total);
+    if(window.Android && Android.progress){
+      try{ Android.progress(JSON.stringify({day:state.day, resetHour:state.resetHour||0, done:done, total:total, part:part, fixedTotal:state.fixed.length})); }catch(_){}
+    }
   }
 
   // ---------- events ----------

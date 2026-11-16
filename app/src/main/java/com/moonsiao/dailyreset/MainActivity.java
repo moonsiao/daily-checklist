@@ -1,13 +1,15 @@
-package com.moon.dailychecklist;
+package com.moonsiao.dailyreset;
 
 import android.app.Activity;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.graphics.Insets;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
+import android.view.WindowInsets;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -24,10 +26,19 @@ public class MainActivity extends Activity {
         WebSettings s = webView.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
-        s.setDatabaseEnabled(true);
         s.setAllowFileAccess(true);
         webView.setWebViewClient(new WebViewClient());
         webView.addJavascriptInterface(new Bridge(), "Android");
+
+        // Android 15+ draws apps edge-to-edge: keep content clear of status bar, nav bar and keyboard.
+        if (Build.VERSION.SDK_INT >= 30) {
+            webView.setOnApplyWindowInsetsListener((v, insets) -> {
+                Insets i = insets.getInsets(WindowInsets.Type.systemBars() | WindowInsets.Type.ime() | WindowInsets.Type.displayCutout());
+                v.setPadding(i.left, i.top, i.right, i.bottom);
+                return WindowInsets.CONSUMED;
+            });
+        }
+
         setContentView(webView);
         webView.loadUrl("file:///android_asset/index.html");
     }
@@ -38,11 +49,6 @@ public class MainActivity extends Activity {
         if (webView != null) {
             webView.evaluateJavascript("document.dispatchEvent(new Event('visibilitychange'))", null);
         }
-    }
-
-    @Override
-    public void onBackPressed() {
-        moveTaskToBack(true);
     }
 
     @Override
@@ -69,6 +75,12 @@ public class MainActivity extends Activity {
             } else {
                 v.vibrate(15);
             }
+        }
+
+        /** Called by the page after every change: {day, resetHour, done, total, part, fixedTotal} */
+        @JavascriptInterface
+        public void progress(String json) {
+            ProgressWidget.save(getApplicationContext(), json);
         }
     }
 }
