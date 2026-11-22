@@ -55,7 +55,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: build-${{ github.run_number }}
-          name: Daily Reset 每日重置 v2.0 (build ${{ github.run_number }})
+          name: Daily Reset 每日重置 v2.1 (build ${{ github.run_number }})
           files: |
             DailyReset.apk
             DailyReset.aab

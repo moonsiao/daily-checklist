@@ -19,7 +19,7 @@ for a in ["    clearTimeout(saveTimer);\n    saveTimer = setTimeout(pushCloud, 8
     src = src.replace(a, "")
 a = "    try {\n      navigator.clipboard.writeText(v)"
 assert a in src
-src = src.replace(a, '    if(window.Android && Android.copy){ Android.copy(v); toast("已复制"); return; }\n' + a)
+src = src.replace(a, '    if(window.Android && Android.copy){ Android.copy(v); toast(T("copied")); return; }\n' + a)
 a = "if(navigator.vibrate){ try{navigator.vibrate(15);}catch(_){} }"
 assert a in src
 src = src.replace(a, "if(window.Android && Android.vibrate){ try{Android.vibrate();}catch(_){} } else " + a)

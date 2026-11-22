@@ -96,43 +96,43 @@
 <div class="wrap">
   <header>
     <div class="date" id="date"></div>
-    <h1>今日清单</h1>
+    <h1 data-i18n="title">今日清单</h1>
     <div class="prog"><div class="bar"><div class="fill" id="fill"></div></div><div class="count" id="count">0/0</div></div>
-    <div class="done-banner" id="banner">🎉 今天全部完成！</div>
+    <div class="done-banner" id="banner" data-i18n="allDone">🎉 今天全部完成！</div>
   </header>
 
   <section id="fixedSec">
     <div class="sec-head">
-      <div class="sec-title"><span class="dot" style="background:var(--accent)"></span>每日固定</div>
+      <div class="sec-title"><span class="dot" style="background:var(--accent)"></span><span data-i18n="fixed">每日固定</span></div>
       <button class="edit-btn" id="editBtn">编辑</button>
     </div>
     <ul id="fixedList"></ul>
-    <form class="add" id="fixedForm"><input id="fixedInput" placeholder="新增每日固定任务…" maxlength="80" autocomplete="off"><label class="times">×<input id="fixedTimes" type="number" inputmode="numeric" min="1" max="99" value="1">次</label><button type="submit">＋</button></form>
+    <form class="add" id="fixedForm"><input id="fixedInput" data-i18n-ph="addFixed" placeholder="新增每日固定任务…" maxlength="80" autocomplete="off"><label class="times">×<input id="fixedTimes" type="number" inputmode="numeric" min="1" max="99" value="1"><span data-i18n="times">次</span></label><button type="submit">＋</button></form>
   </section>
 
   <section class="temp" id="tempSec">
     <div class="sec-head">
-      <div class="sec-title"><span class="dot" style="background:var(--temp)"></span>今天临时（明天自动清空）</div>
+      <div class="sec-title"><span class="dot" style="background:var(--temp)"></span><span data-i18n="temp">今天临时（明天自动清空）</span></div>
     </div>
     <ul id="tempList"></ul>
-    <form class="add" id="tempForm"><input id="tempInput" placeholder="新增今天的临时任务…" maxlength="80" autocomplete="off"><label class="times">×<input id="tempTimes" type="number" inputmode="numeric" min="1" max="99" value="1">次</label><button type="submit">＋</button></form>
+    <form class="add" id="tempForm"><input id="tempInput" data-i18n-ph="addTemp" placeholder="新增今天的临时任务…" maxlength="80" autocomplete="off"><label class="times">×<input id="tempTimes" type="number" inputmode="numeric" min="1" max="99" value="1"><span data-i18n="times">次</span></label><button type="submit">＋</button></form>
   </section>
 
   <div class="foot">
-    每天 <select id="resetSel" class="rsel"></select> 自动重置 · 数据存在本机<br>
-    <button id="backupBtn">备份 / 还原</button>
+    <span data-i18n="resetPre">每天</span> <select id="resetSel" class="rsel"></select> <span data-i18n="resetPost">自动重置 · 数据存在本机</span><br>
+    <button id="backupBtn" data-i18n="backup">备份 / 还原</button>
   </div>
 </div>
 
 <div class="modal" id="modal">
   <div class="sheet">
-    <h3>备份 / 还原</h3>
-    <p>备份：复制下面的文字，存到记事本或 WhatsApp。还原：把备份文字贴进来，按"还原"。</p>
+    <h3 data-i18n="backup">备份 / 还原</h3>
+    <p data-i18n="backupHelp">备份：复制下面的文字，存到记事本或 WhatsApp。还原：把备份文字贴进来，按"还原"。</p>
     <textarea id="backupText"></textarea>
     <div class="row">
-      <button id="copyBtn">复制</button>
-      <button id="restoreBtn">还原</button>
-      <button class="primary" id="closeBtn">关闭</button>
+      <button id="copyBtn" data-i18n="copy">复制</button>
+      <button id="restoreBtn" data-i18n="restore">还原</button>
+      <button class="primary" id="closeBtn" data-i18n="close">关闭</button>
     </div>
   </div>
 </div>
@@ -141,6 +141,27 @@
 <script>
 (function(){
   var KEY = "daily_checklist_v1";
+  var ZH = /^zh/i.test(navigator.language || "");
+  var I18N = {
+    zh: { title:"今日清单", allDone:"🎉 今天全部完成！", fixed:"每日固定", temp:"今天临时（明天自动清空）",
+      addFixed:"新增每日固定任务…", addTemp:"新增今天的临时任务…", times:"次", resetPre:"每天", resetPost:"自动重置 · 数据存在本机",
+      backup:"备份 / 还原", backupHelp:"备份：复制下面的文字，存到记事本或 WhatsApp。还原：把备份文字贴进来，按“还原”。",
+      copy:"复制", restore:"还原", close:"关闭", edit:"编辑", done:"完成", minus:"减一", up:"上移", del:"删除",
+      emptyFixed:"还没有固定任务，在下面新增（例如：运动、喝水、发 TikTok）", emptyTemp:"今天没有临时任务",
+      deleted:"已删除", fullHint:"已完成 · 按 − 可减少", finished:" 完成", copied:"已复制", selectCopy:"请长按选择并复制",
+      restored:"已还原固定任务", badBackup:"备份文字格式不对", resetAt:"每天 %s 重置" },
+    en: { title:"Today", allDone:"🎉 All done for today!", fixed:"Every day", temp:"Today only (cleared tomorrow)",
+      addFixed:"Add a daily task…", addTemp:"Add a task for today…", times:"/day", resetPre:"Resets daily at", resetPost:"· Data stays on this device",
+      backup:"Backup / Restore", backupHelp:"Backup: copy the text below and keep it in Notes or a chat. Restore: paste a backup here and tap Restore.",
+      copy:"Copy", restore:"Restore", close:"Close", edit:"Edit", done:"Done", minus:"Minus one", up:"Move up", del:"Delete",
+      emptyFixed:"No daily tasks yet. Add one below (e.g. workout, water, game dailies).", emptyTemp:"No tasks for today",
+      deleted:"Deleted", fullHint:"Done · tap − to undo", finished:" done", copied:"Copied", selectCopy:"Long-press to select and copy",
+      restored:"Daily tasks restored", badBackup:"That backup text isn't valid", resetAt:"Resets daily at %s" }
+  };
+  function T(k){ var d = ZH ? I18N.zh : I18N.en; return d[k] != null ? d[k] : I18N.zh[k]; }
+  document.documentElement.lang = ZH ? "zh" : "en";
+  Array.prototype.forEach.call(document.querySelectorAll("[data-i18n]"), function(el){ el.textContent = T(el.getAttribute("data-i18n")); });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-i18n-ph]"), function(el){ el.placeholder = T(el.getAttribute("data-i18n-ph")); });
   var CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="#05210f" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
   var editing = false;
 
@@ -204,31 +225,30 @@
     return '<li class="'+(full?"checked":"")+'" data-id="'+t.id+'" data-kind="'+kind+'">'+
       box+
       '<div class="txt"'+(fixedEdit?' contenteditable="true"':'')+'>'+esc(t.text)+'</div>'+
-      (target>1 ? '<button class="minus" data-act="minus" aria-label="减一"'+(count>0?'':' style="visibility:hidden"')+'>−</button><div class="cnt">'+Math.min(count,target)+'/'+target+'</div>' : '')+
-      (kind==="fixed" ? '<label class="tgt">×<input type="number" inputmode="numeric" min="1" max="99" value="'+target+'" data-tgt="1">次</label>' : '')+
-      (kind==="fixed" && idx>0 ? '<button class="up" data-act="up" aria-label="上移">↑</button>' : (kind==="fixed"?'<button class="up" style="visibility:hidden">↑</button>':''))+
-      '<button class="del" data-act="del" aria-label="删除">✕</button>'+
+      (target>1 ? '<button class="minus" data-act="minus" aria-label="'+T('minus')+'"'+(count>0?'':' style="visibility:hidden"')+'>−</button><div class="cnt">'+Math.min(count,target)+'/'+target+'</div>' : '')+
+      (kind==="fixed" ? '<label class="tgt">×<input type="number" inputmode="numeric" min="1" max="99" value="'+target+'" data-tgt="1">'+T('times')+'</label>' : '')+
+      (kind==="fixed" && idx>0 ? '<button class="up" data-act="up" aria-label="'+T('up')+'">↑</button>' : (kind==="fixed"?'<button class="up" style="visibility:hidden">↑</button>':''))+
+      '<button class="del" data-act="del" aria-label="'+T('del')+'">✕</button>'+
     '</li>';
   }
 
   function render(){
     var d = logicalNow();
-    var wk = ["日","一","二","三","四","五","六"][d.getDay()];
     $("resetSel").value = String(state.resetHour||0);
-    $("date").textContent = (d.getMonth()+1)+"月"+d.getDate()+"日 · 星期"+wk;
+    $("date").textContent = ZH ? (d.getMonth()+1)+"月"+d.getDate()+"日 · 星期"+["日","一","二","三","四","五","六"][d.getDay()] : d.toLocaleDateString("en-GB",{weekday:"long", day:"numeric", month:"long"});
 
     var fl = $("fixedList");
     fl.innerHTML = state.fixed.length
       ? state.fixed.map(function(t,i){ return itemHTML(t, state.done[t.id]||0, "fixed", i); }).join("")
-      : '<div class="empty">还没有固定任务，在下面新增（例如：运动、喝水、发 TikTok）</div>';
+      : '<div class="empty">'+T('emptyFixed')+'</div>';
     $("fixedSec").classList.toggle("editing", editing);
-    $("editBtn").textContent = editing ? "完成" : "编辑";
+    $("editBtn").textContent = editing ? T("done") : T("edit");
     $("editBtn").classList.toggle("on", editing);
 
     var tl = $("tempList");
     tl.innerHTML = state.temp.length
       ? state.temp.map(function(t){ return itemHTML(t, t.count||0, "temp", 0); }).join("")
-      : '<div class="empty">今天没有临时任务</div>';
+      : '<div class="empty">'+T('emptyTemp')+'</div>';
     $("tempSec").classList.toggle("editing", false);
 
     var total = state.fixed.length + state.temp.length, done = 0, part = 0;
@@ -250,7 +270,7 @@
     if(act === "del"){
       if(kind==="fixed"){ state.fixed = state.fixed.filter(function(t){return t.id!==id;}); delete state.done[id]; }
       else { state.temp = state.temp.filter(function(t){return t.id!==id;}); }
-      save(); render(); toast("已删除"); return;
+      save(); render(); toast(T("deleted")); return;
     }
     if(act === "up"){
       var i = state.fixed.findIndex(function(t){return t.id===id;});
@@ -265,11 +285,11 @@
     var cur = kind==="fixed" ? (state.done[id]||0) : (item.count||0);
     var next;
     if(act === "minus") next = Math.max(0, cur-1);
-    else if(cur >= target){ if(target>1){ toast("已完成 · 按 − 可减少"); return; } next = 0; }
+    else if(cur >= target){ if(target>1){ toast(T("fullHint")); return; } next = 0; }
     else next = cur+1;
     if(kind==="fixed"){ if(next) state.done[id]=next; else delete state.done[id]; }
     else item.count = next;
-    if(next>=target && cur<target && target>1) toast("✓ "+item.text+" 完成");
+    if(next>=target && cur<target && target>1) toast("✓ "+item.text+T("finished"));
     if(window.Android && Android.vibrate){ try{Android.vibrate();}catch(_){} } else if(navigator.vibrate){ try{navigator.vibrate(15);}catch(_){} }
     save(); render();
   }
@@ -321,10 +341,10 @@
   $("modal").addEventListener("click", function(e){ if(e.target.id==="modal") $("modal").classList.remove("show"); });
   $("copyBtn").addEventListener("click", function(){
     var v = $("backupText").value;
-    if(window.Android && Android.copy){ Android.copy(v); toast("已复制"); return; }
+    if(window.Android && Android.copy){ Android.copy(v); toast(T("copied")); return; }
     try {
-      navigator.clipboard.writeText(v).then(function(){toast("已复制");}, function(){ $("backupText").select(); toast("请长按选择并复制"); });
-    } catch(e){ $("backupText").select(); toast("请长按选择并复制"); }
+      navigator.clipboard.writeText(v).then(function(){toast(T("copied"));}, function(){ $("backupText").select(); toast(T("selectCopy")); });
+    } catch(e){ $("backupText").select(); toast(T("selectCopy")); }
   });
   $("restoreBtn").addEventListener("click", function(){
     try{
@@ -332,8 +352,8 @@
       if(!obj || !Array.isArray(obj.fixed)) throw 0;
       state.fixed = normalize({fixed:obj.fixed}).fixed;
       if(obj.resetHour!==undefined){ state.resetHour = normalize({resetHour:obj.resetHour}).resetHour; state.day = todayStr(); }
-      save(); render(); $("modal").classList.remove("show"); toast("已还原固定任务");
-    }catch(e){ toast("备份文字格式不对"); }
+      save(); render(); $("modal").classList.remove("show"); toast(T("restored"));
+    }catch(e){ toast(T("badBackup")); }
   });
 
   var toastT;
@@ -346,7 +366,7 @@
     sel.addEventListener("change", function(){
       state.resetHour = parseInt(sel.value,10)||0;
       state.day = todayStr(); // keep today's ticks when changing the time
-      save(); render(); toast("每天 "+sel.options[sel.selectedIndex].text+" 重置");
+      save(); render(); toast(T("resetAt").replace("%s", sel.options[sel.selectedIndex].text));
     });
   })();
 
